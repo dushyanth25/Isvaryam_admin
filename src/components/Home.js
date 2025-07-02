@@ -12,7 +12,9 @@ function Home() {
       <button onClick={() => navigate('/reviews')}>Reviews</button>
       <button onClick={() => navigate('/wishlist')}>Wishlist</button> {/* Added Wishlist button */}
       <button onClick={() => navigate('/coupons')}>Coupons</button> {/* Add this line */}
+      <button onClick={() => navigate('/display-recipes')}>Display Recipes</button> {/* Added Edit Recipe button */}
      {/* Fastbot Integration */}
+<button onClick={() => navigate('/add-recipe')}>Add Recipe</button> {/* Add this line */}
       <div style={{ marginTop: 20 }}>
         <iframe
           style={{ width: 400, height: 600, border: 'none' }}

@@ -9,7 +9,10 @@ import DisplayProducts from './components/DisplayProducts';
 import EditProducts from './components/EditProducts';
 import Reviews from './components/Reviews';
 import WhishList from './components/WhishList';
-// ...existing code...
+import AddRecipe from './components/AddRecipe';
+import DisplayRecipe from './components/DisplayRecipe';
+import EditRecipe from './components/EditRecipe';
+
 function App() {
   return (
     <Router>
@@ -23,6 +26,9 @@ function App() {
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/wishlist" element={<WhishList />} />
         <Route path="/coupons" element={<CouponPage />} />
+        <Route path="/add-recipe" element={<AddRecipe />} />
+        <Route path="/display-recipes" element={<DisplayRecipe />} />
+        <Route path="/edit-recipe/:id" element={<EditRecipe />} />
       </Routes>
     </Router>
   );

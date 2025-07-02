@@ -6,12 +6,14 @@ function DisplayProducts() {
   const [products, setProducts] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [avgRatings, setAvgRatings] = useState({});
-  const [reviewInputs, setReviewInputs] = useState({}); // { [productId]: { text, rating, images } }
+  const [reviewInputs, setReviewInputs] = useState({});
+  const [editingProduct, setEditingProduct] = useState(null); // <-- new state
+  const [editForm, setEditForm] = useState({}); // <-- new state
   const navigate = useNavigate();
 
   useEffect(() => {
     axios.get('/api/foods').then(res => setProducts(res.data));
-    axios.get('/api/whishlist').then(res => setWishlist(res.data.map(w => w.productId._id)));
+    axios.get('/api/whishlist').then(res => setWishlist(res.data.map(w => w.productId && w.productId._id).filter(Boolean)));
     axios.get('/api/reviews/average-ratings').then(res => {
       const ratingsObj = {};
       res.data.forEach(r => {
@@ -108,6 +110,93 @@ function DisplayProducts() {
     }
   };
 
+  // --- Update logic ---
+  const handleEditClick = (product) => {
+    setEditingProduct(product._id);
+    setEditForm({
+      id: product._id,
+      productId: product.productId,
+      name: product.name,
+      description: product.description,
+      images: product.images ? [...product.images] : [],
+      category: product.category,
+      specifications: product.specifications ? [...product.specifications] : [],
+      quantities: product.quantities ? [...product.quantities] : [],
+      discount: product.discount ?? 0
+    });
+  };
+
+  const handleEditFormChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleEditFormArrayChange = (field, idx, subfield, value) => {
+    setEditForm(prev => {
+      const arr = [...prev[field]];
+      arr[idx][subfield] = value;
+      return { ...prev, [field]: arr };
+    });
+  };
+
+  const handleEditFormArrayAdd = (field, template) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: [...prev[field], template]
+    }));
+  };
+
+  const handleEditFormArrayRemove = (field, idx) => {
+    setEditForm(prev => {
+      const arr = [...prev[field]];
+      arr.splice(idx, 1);
+      return { ...prev, [field]: arr };
+    });
+  };
+
+  const handleEditFormImageChange = (idx, value) => {
+    setEditForm(prev => {
+      const arr = [...prev.images];
+      arr[idx] = value;
+      return { ...prev, images: arr };
+    });
+  };
+
+  const handleEditFormImageAdd = () => {
+    setEditForm(prev => ({
+      ...prev,
+      images: [...prev.images, '']
+    }));
+  };
+
+  const handleEditFormImageRemove = (idx) => {
+    setEditForm(prev => {
+      const arr = [...prev.images];
+      arr.splice(idx, 1);
+      return { ...prev, images: arr };
+    });
+  };
+
+  const handleEditCancel = () => {
+    setEditingProduct(null);
+    setEditForm({});
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put('/api/foods', editForm);
+      setProducts(products.map(prod => prod._id === editForm.id ? { ...prod, ...editForm } : prod));
+      setEditingProduct(null);
+      setEditForm({});
+      alert('Product updated!');
+    } catch (err) {
+      alert('Error updating product');
+    }
+  };
+
   return (
     <div>
       <h2>All Products</h2>
@@ -123,37 +212,96 @@ function DisplayProducts() {
             <th>Wishlist</th>
             <th>Actions</th>
             <th>Review</th>
-            <th>Remove</th> {/* <-- Add this */}
+            <th>Remove</th>
+            <th>Update</th> {/* <-- Add this */}
           </tr>
         </thead>
         <tbody>
           {products.map(prod => (
             <tr key={prod._id || prod.productId}>
               <td>{prod.productId}</td>
-              <td>{prod.name}</td>
               <td>
-                {prod.images && prod.images.length > 0 && (
-                  <img
-                    src={prod.images[0]}
-                    alt={prod.name}
-                    style={{ width: 60, height: 60, objectFit: 'cover' }}
+                {editingProduct === prod._id ? (
+                  <input
+                    value={editForm.name}
+                    onChange={e => handleEditFormChange('name', e.target.value)}
                   />
+                ) : (
+                  prod.name
                 )}
               </td>
               <td>
-                {prod.quantities && prod.quantities.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    {prod.quantities.map(q => (
-                      <li key={q.size}>
-                        {q.size}: ₹{q.price}
-                      </li>
+                {editingProduct === prod._id ? (
+                  <div>
+                    {editForm.images && editForm.images.map((img, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
+                        <input
+                          value={img}
+                          onChange={e => handleEditFormImageChange(idx, e.target.value)}
+                          style={{ width: 120 }}
+                        />
+                        <button type="button" onClick={() => handleEditFormImageRemove(idx)}>-</button>
+                      </div>
                     ))}
-                  </ul>
+                    <button type="button" onClick={handleEditFormImageAdd}>Add Image</button>
+                  </div>
                 ) : (
-                  'No price'
+                  prod.images && prod.images.length > 0 && (
+                    <img
+                      src={prod.images[0]}
+                      alt={prod.name}
+                      style={{ width: 60, height: 60, objectFit: 'cover' }}
+                    />
+                  )
                 )}
               </td>
-              <td>{prod.category}</td>
+              <td>
+                {editingProduct === prod._id ? (
+                  <div>
+                    {editForm.quantities && editForm.quantities.map((q, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
+                        <input
+                          value={q.size}
+                          onChange={e => handleEditFormArrayChange('quantities', idx, 'size', e.target.value)}
+                          placeholder="Size"
+                          style={{ width: 50 }}
+                        />
+                        <input
+                          type="number"
+                          value={q.price}
+                          onChange={e => handleEditFormArrayChange('quantities', idx, 'price', e.target.value)}
+                          placeholder="Price"
+                          style={{ width: 70, marginLeft: 4 }}
+                        />
+                        <button type="button" onClick={() => handleEditFormArrayRemove('quantities', idx)}>-</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => handleEditFormArrayAdd('quantities', { size: '', price: '' })}>Add</button>
+                  </div>
+                ) : (
+                  prod.quantities && prod.quantities.length > 0 ? (
+                    <ul style={{ margin: 0, paddingLeft: 16 }}>
+                      {prod.quantities.map(q => (
+                        <li key={q.size}>
+                          {q.size}: ₹{q.price}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'No price'
+                  )
+                )}
+              </td>
+              <td>
+                {editingProduct === prod._id ? (
+                  <input
+                    value={editForm.category}
+                    onChange={e => handleEditFormChange('category', e.target.value)}
+                  />
+                ) : (
+                  prod.category
+                )}
+              </td>
               <td>
                 {avgRatings[prod._id]
                   ? avgRatings[prod._id].toFixed(1)
@@ -209,6 +357,25 @@ function DisplayProducts() {
                 >
                   Remove
                 </button>
+              </td>
+              <td>
+                {editingProduct === prod._id ? (
+                  <form onSubmit={handleEditSubmit}>
+                    <button type="submit" style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}>
+                      Save
+                    </button>
+                    <button type="button" onClick={handleEditCancel} style={{ marginLeft: 8 }}>
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    style={{ background: '#2980b9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
+                    onClick={() => handleEditClick(prod)}
+                  >
+                    Update
+                  </button>
+                )}
               </td>
             </tr>
           ))}
