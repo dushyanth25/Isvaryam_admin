@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from '../api/axiosInstance';
 import { useNavigate } from 'react-router-dom';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload'; // Add this import
 
 function AddProducts() {
   const [form, setForm] = useState({
@@ -42,17 +43,16 @@ function AddProducts() {
   // Handle multiple image uploads and convert to base64
   const handleImagesChange = async (e) => {
     const files = Array.from(e.target.files);
-    const base64Images = await Promise.all(
-      files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      })
-    );
-    setForm({ ...form, images: base64Images });
+    try {
+      const urls = [];
+      for (const file of files) {
+        const url = await uploadToCloudinary(file);
+        urls.push(url);
+      }
+      setForm({ ...form, images: urls });
+    } catch {
+      alert('Image upload failed');
+    }
   };
 
   const handleSubmit = async (e) => {

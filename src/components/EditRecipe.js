@@ -4,6 +4,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 
+async function uploadToCloudinary(file) {
+  const data = new FormData();
+  data.append('file', file);
+  data.append('upload_preset', 'isvaryam'); // <-- set your preset
+  const res = await fetch('https://api.cloudinary.com/v1_1/ddv0mpecp/image/upload', {
+    method: 'POST',
+    body: data,
+  });
+  const json = await res.json();
+  return json.secure_url;
+}
+
 export default function EditRecipe() {
   const { id } = useParams();
   const [form, setForm] = useState({
@@ -96,17 +108,16 @@ export default function EditRecipe() {
 
   const handleImagesChange = async (e) => {
     const files = Array.from(e.target.files);
-    const base64Images = await Promise.all(
-      files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      })
-    );
-    setForm(prev => ({ ...prev, images: base64Images }));
+    try {
+      const urls = [];
+      for (const file of files) {
+        const url = await uploadToCloudinary(file);
+        urls.push(url);
+      }
+      setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }));
+    } catch {
+      setError('Image upload failed');
+    }
   };
 
   const removeImage = idx => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axiosInstance';
 import { useNavigate, useParams } from 'react-router-dom';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload'; // Add this import
 
 function EditProducts() {
   const { productId } = useParams();
@@ -54,17 +55,16 @@ function EditProducts() {
   // Add new images from file input (convert to base64)
   const handleAddImages = async (e) => {
     const files = Array.from(e.target.files);
-    const base64Images = await Promise.all(
-      files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      })
-    );
-    setForm({ ...form, images: [...form.images, ...base64Images] });
+    try {
+      const urls = [];
+      for (const file of files) {
+        const url = await uploadToCloudinary(file);
+        urls.push(url);
+      }
+      setForm({ ...form, images: [...form.images, ...urls] });
+    } catch {
+      alert('Image upload failed');
+    }
   };
 
   const handleSubmit = async (e) => {
