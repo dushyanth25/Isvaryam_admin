@@ -11,7 +11,8 @@ function AddProducts() {
     images: [],
     category: '',
     specifications: [{ name: '', value: '' }],
-    quantities: [{ size: '', price: '' }]
+    quantities: [{ size: '', price: '' }],
+    ingredients: [{ name: '', quantity: '' }] // <-- Add this
   });
   const navigate = useNavigate();
 
@@ -38,6 +39,23 @@ function AddProducts() {
 
   const addQuantity = () => {
     setForm({ ...form, quantities: [...form.quantities, { size: '', price: '' }] });
+  };
+
+  // Ingredients handlers
+  const handleIngredientChange = (idx, e) => {
+    const ingredients = [...form.ingredients];
+    ingredients[idx][e.target.name] = e.target.value;
+    setForm({ ...form, ingredients });
+  };
+
+  const addIngredient = () => {
+    setForm({ ...form, ingredients: [...form.ingredients, { name: '', quantity: '' }] });
+  };
+
+  const removeIngredient = (idx) => {
+    const ingredients = [...form.ingredients];
+    ingredients.splice(idx, 1);
+    setForm({ ...form, ingredients });
   };
 
   // Handle multiple image uploads and convert to base64
@@ -132,6 +150,29 @@ function AddProducts() {
           </div>
         ))}
         <button type="button" onClick={addQuantity}>Add Quantity</button>
+        <h4>Ingredients</h4>
+        {form.ingredients.map((ing, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+            <input
+              name="name"
+              placeholder="Ingredient Name"
+              value={ing.name}
+              onChange={e => handleIngredientChange(idx, e)}
+              required
+            />
+            <input
+              name="quantity"
+              placeholder="Quantity"
+              value={ing.quantity}
+              onChange={e => handleIngredientChange(idx, e)}
+              required
+            />
+            {form.ingredients.length > 1 && (
+              <button type="button" onClick={() => removeIngredient(idx)}>-</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={addIngredient}>Add Ingredient</button>
         <br />
         <button type="submit">Add Product</button>
       </form>

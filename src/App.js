@@ -29,6 +29,7 @@ function App() {
         <Route path="/add-recipe" element={<AddRecipe />} />
         <Route path="/display-recipes" element={<DisplayRecipe />} />
         <Route path="/edit-recipe/:id" element={<EditRecipe />} />
+        <Route path="/edit-product/:productId" element={<EditProducts />} />
       </Routes>
     </Router>
   );

@@ -205,103 +205,70 @@ function DisplayProducts() {
           <tr>
             <th>ProductId</th>
             <th>Name</th>
-            <th>Image</th>
-            <th>Quantities & Prices</th>
+            <th>Images</th>
+            <th>Description</th>
             <th>Category</th>
+            <th>Quantities & Prices</th>
+            <th>Specifications</th>
+            <th>Ingredients</th>
+            <th>Discount</th>
             <th>Average Rating</th>
             <th>Wishlist</th>
             <th>Actions</th>
             <th>Review</th>
             <th>Remove</th>
-            <th>Update</th> {/* <-- Add this */}
+            <th>Update</th>
           </tr>
         </thead>
         <tbody>
           {products.map(prod => (
             <tr key={prod._id || prod.productId}>
               <td>{prod.productId}</td>
+              <td>{prod.name}</td>
               <td>
-                {editingProduct === prod._id ? (
-                  <input
-                    value={editForm.name}
-                    onChange={e => handleEditFormChange('name', e.target.value)}
-                  />
-                ) : (
-                  prod.name
-                )}
-              </td>
-              <td>
-                {editingProduct === prod._id ? (
-                  <div>
-                    {editForm.images && editForm.images.map((img, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
-                        <input
-                          value={img}
-                          onChange={e => handleEditFormImageChange(idx, e.target.value)}
-                          style={{ width: 120 }}
-                        />
-                        <button type="button" onClick={() => handleEditFormImageRemove(idx)}>-</button>
-                      </div>
+                {prod.images && prod.images.length > 0 ? (
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {prod.images.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={prod.name}
+                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+                      />
                     ))}
-                    <button type="button" onClick={handleEditFormImageAdd}>Add Image</button>
                   </div>
-                ) : (
-                  prod.images && prod.images.length > 0 && (
-                    <img
-                      src={prod.images[0]}
-                      alt={prod.name}
-                      style={{ width: 60, height: 60, objectFit: 'cover' }}
-                    />
-                  )
-                )}
+                ) : 'No images'}
               </td>
+              <td>{prod.description}</td>
+              <td>{prod.category}</td>
               <td>
-                {editingProduct === prod._id ? (
-                  <div>
-                    {editForm.quantities && editForm.quantities.map((q, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center' }}>
-                        <input
-                          value={q.size}
-                          onChange={e => handleEditFormArrayChange('quantities', idx, 'size', e.target.value)}
-                          placeholder="Size"
-                          style={{ width: 50 }}
-                        />
-                        <input
-                          type="number"
-                          value={q.price}
-                          onChange={e => handleEditFormArrayChange('quantities', idx, 'price', e.target.value)}
-                          placeholder="Price"
-                          style={{ width: 70, marginLeft: 4 }}
-                        />
-                        <button type="button" onClick={() => handleEditFormArrayRemove('quantities', idx)}>-</button>
-                      </div>
+                {prod.quantities && prod.quantities.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {prod.quantities.map((q, idx) => (
+                      <li key={idx}>{q.size}: ₹{q.price}</li>
                     ))}
-                    <button type="button" onClick={() => handleEditFormArrayAdd('quantities', { size: '', price: '' })}>Add</button>
-                  </div>
-                ) : (
-                  prod.quantities && prod.quantities.length > 0 ? (
-                    <ul style={{ margin: 0, paddingLeft: 16 }}>
-                      {prod.quantities.map(q => (
-                        <li key={q.size}>
-                          {q.size}: ₹{q.price}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    'No price'
-                  )
-                )}
+                  </ul>
+                ) : 'No price'}
               </td>
               <td>
-                {editingProduct === prod._id ? (
-                  <input
-                    value={editForm.category}
-                    onChange={e => handleEditFormChange('category', e.target.value)}
-                  />
-                ) : (
-                  prod.category
-                )}
+                {prod.specifications && prod.specifications.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {prod.specifications.map((spec, idx) => (
+                      <li key={idx}>{spec.name}: {spec.value}</li>
+                    ))}
+                  </ul>
+                ) : 'No specs'}
               </td>
+              <td>
+                {prod.ingredients && prod.ingredients.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {prod.ingredients.map((ing, idx) => (
+                      <li key={idx}>{ing.name} ({ing.quantity})</li>
+                    ))}
+                  </ul>
+                ) : 'No ingredients'}
+              </td>
+              <td>{prod.discount ?? 0}%</td>
               <td>
                 {avgRatings[prod._id]
                   ? avgRatings[prod._id].toFixed(1)
@@ -359,23 +326,12 @@ function DisplayProducts() {
                 </button>
               </td>
               <td>
-                {editingProduct === prod._id ? (
-                  <form onSubmit={handleEditSubmit}>
-                    <button type="submit" style={{ background: '#27ae60', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}>
-                      Save
-                    </button>
-                    <button type="button" onClick={handleEditCancel} style={{ marginLeft: 8 }}>
-                      Cancel
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    style={{ background: '#2980b9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
-                    onClick={() => handleEditClick(prod)}
-                  >
-                    Update
-                  </button>
-                )}
+                <button
+                  style={{ background: '#2980b9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
+                  onClick={() => navigate(`/edit-product/${prod.productId}`)}
+                >
+                  Update
+                </button>
               </td>
             </tr>
           ))}

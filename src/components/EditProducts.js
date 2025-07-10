@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axiosInstance';
 import { useNavigate, useParams } from 'react-router-dom';
-import { uploadToCloudinary } from '../utils/cloudinaryUpload'; // Add this import
+
+async function uploadToCloudinary(file) {
+  const data = new FormData();
+  data.append('file', file);
+  data.append('upload_preset', 'isvaryam'); // <-- set your preset
+  const res = await fetch('https://api.cloudinary.com/v1_1/ddv0mpecp/image/upload', {
+    method: 'POST',
+    body: data,
+  });
+  const json = await res.json();
+  return json.secure_url;
+}
 
 function EditProducts() {
   const { productId } = useParams();
@@ -18,41 +29,57 @@ function EditProducts() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // --- Specifications handlers ---
   const handleSpecChange = (idx, e) => {
     const specs = [...form.specifications];
     specs[idx][e.target.name] = e.target.value;
     setForm({ ...form, specifications: specs });
   };
-
   const addSpec = () => {
     setForm({ ...form, specifications: [...form.specifications, { name: '', value: '' }] });
   };
+  const removeSpec = (idx) => {
+    const specs = [...form.specifications];
+    specs.splice(idx, 1);
+    setForm({ ...form, specifications: specs });
+  };
 
-  // Quantities handlers
+  // --- Quantities handlers ---
   const handleQuantityChange = (idx, e) => {
     const quantities = [...form.quantities];
     quantities[idx][e.target.name] = e.target.value;
     setForm({ ...form, quantities });
   };
-
   const addQuantity = () => {
     setForm({ ...form, quantities: [...form.quantities, { size: '', price: '' }] });
   };
-
   const removeQuantity = (idx) => {
     const quantities = [...form.quantities];
     quantities.splice(idx, 1);
     setForm({ ...form, quantities });
   };
 
-  // Remove an image by index
+  // --- Ingredients handlers ---
+  const handleIngredientChange = (idx, e) => {
+    const ingredients = [...form.ingredients];
+    ingredients[idx][e.target.name] = e.target.value;
+    setForm({ ...form, ingredients });
+  };
+  const addIngredient = () => {
+    setForm({ ...form, ingredients: [...form.ingredients, { name: '', quantity: '' }] });
+  };
+  const removeIngredient = (idx) => {
+    const ingredients = [...form.ingredients];
+    ingredients.splice(idx, 1);
+    setForm({ ...form, ingredients });
+  };
+
+  // --- Images handlers ---
   const handleRemoveImage = (idx) => {
     const newImages = [...form.images];
     newImages.splice(idx, 1);
     setForm({ ...form, images: newImages });
   };
-
-  // Add new images from file input (convert to base64)
   const handleAddImages = async (e) => {
     const files = Array.from(e.target.files);
     try {
@@ -81,6 +108,7 @@ function EditProducts() {
         <input name="name" placeholder="Name" value={form.name} onChange={handleChange} required />
         <input name="description" placeholder="Description" value={form.description} onChange={handleChange} />
         <input name="category" placeholder="Category" value={form.category} onChange={handleChange} />
+        <input name="discount" type="number" placeholder="Discount (%)" value={form.discount ?? 0} onChange={handleChange} />
 
         <h4>Images</h4>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -102,13 +130,14 @@ function EditProducts() {
                   height: 20,
                   cursor: 'pointer'
                 }}
-                title="Remove image"
+                title="Remove"
               >×</button>
             </div>
           ))}
         </div>
         <div style={{ marginTop: 10 }}>
           <input
+            id="add-images"
             type="file"
             multiple
             accept="image/*"
@@ -145,24 +174,52 @@ function EditProducts() {
 
         <h4>Specifications</h4>
         {form.specifications.map((spec, idx) => (
-          <div key={idx}>
+          <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
             <input
               name="name"
               placeholder="Spec Name"
               value={spec.name}
-              onChange={(e) => handleSpecChange(idx, e)}
+              onChange={e => handleSpecChange(idx, e)}
               required
             />
             <input
               name="value"
               placeholder="Spec Value"
               value={spec.value}
-              onChange={(e) => handleSpecChange(idx, e)}
+              onChange={e => handleSpecChange(idx, e)}
               required
             />
+            {form.specifications.length > 1 && (
+              <button type="button" onClick={() => removeSpec(idx)}>-</button>
+            )}
           </div>
         ))}
         <button type="button" onClick={addSpec}>Add Specification</button>
+
+        <h4>Ingredients</h4>
+        {form.ingredients.map((ing, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+            <input
+              name="name"
+              placeholder="Ingredient Name"
+              value={ing.name}
+              onChange={e => handleIngredientChange(idx, e)}
+              required
+            />
+            <input
+              name="quantity"
+              placeholder="Quantity"
+              value={ing.quantity}
+              onChange={e => handleIngredientChange(idx, e)}
+              required
+            />
+            {form.ingredients.length > 1 && (
+              <button type="button" onClick={() => removeIngredient(idx)}>-</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={addIngredient}>Add Ingredient</button>
+
         <br />
         <button type="submit">Update Product</button>
       </form>
