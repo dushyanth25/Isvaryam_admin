@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axiosInstance';
 import { useNavigate } from 'react-router-dom';
+import './DisplayProducts.css'; // We'll create this CSS file
 
 function DisplayProducts() {
   const [products, setProducts] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [avgRatings, setAvgRatings] = useState({});
   const [reviewInputs, setReviewInputs] = useState({});
-  const [editingProduct, setEditingProduct] = useState(null); // <-- new state
-  const [editForm, setEditForm] = useState({}); // <-- new state
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [expandedProduct, setExpandedProduct] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +37,6 @@ function DisplayProducts() {
     }
   };
 
-  // --- Review logic ---
   const handleReviewInputChange = (productId, field, value) => {
     setReviewInputs(prev => ({
       ...prev,
@@ -63,7 +64,6 @@ function DisplayProducts() {
       return;
     }
 
-    // Prepare form data for images
     const formData = new FormData();
     formData.append('productId', productId);
     formData.append('review', reviewData.text);
@@ -85,14 +85,13 @@ function DisplayProducts() {
     }
   };
 
-  // --- Star rating component ---
-  const StarRating = ({ value, onChange }) => (
-    <span>
+  const StarRating = ({ value, onChange, readonly = false }) => (
+    <span className="star-rating">
       {[1,2,3,4,5].map(star => (
         <span
           key={star}
-          style={{ cursor: 'pointer', color: star <= value ? '#ffc107' : '#e4e5e9', fontSize: 20 }}
-          onClick={() => onChange(star)}
+          className={`star ${star <= value ? 'filled' : ''} ${readonly ? 'readonly' : 'clickable'}`}
+          onClick={() => !readonly && onChange(star)}
         >★</span>
       ))}
     </span>
@@ -110,7 +109,6 @@ function DisplayProducts() {
     }
   };
 
-  // --- Update logic ---
   const handleEditClick = (product) => {
     setEditingProduct(product._id);
     setEditForm({
@@ -197,146 +195,196 @@ function DisplayProducts() {
     }
   };
 
+  const toggleProductExpansion = (productId) => {
+    setExpandedProduct(expandedProduct === productId ? null : productId);
+  };
+
   return (
-    <div>
-      <h2>All Products</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>ProductId</th>
-            <th>Name</th>
-            <th>Images</th>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Quantities & Prices</th>
-            <th>Specifications</th>
-            <th>Ingredients</th>
-            <th>Discount</th>
-            <th>Average Rating</th>
-            <th>Wishlist</th>
-            <th>Actions</th>
-            <th>Review</th>
-            <th>Remove</th>
-            <th>Update</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(prod => (
-            <tr key={prod._id || prod.productId}>
-              <td>{prod.productId}</td>
-              <td>{prod.name}</td>
-              <td>
-                {prod.images && prod.images.length > 0 ? (
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {prod.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={prod.name}
-                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
-                      />
-                    ))}
-                  </div>
-                ) : 'No images'}
-              </td>
-              <td>{prod.description}</td>
-              <td>{prod.category}</td>
-              <td>
-                {prod.quantities && prod.quantities.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    {prod.quantities.map((q, idx) => (
-                      <li key={idx}>{q.size}: ₹{q.price}</li>
-                    ))}
-                  </ul>
-                ) : 'No price'}
-              </td>
-              <td>
-                {prod.specifications && prod.specifications.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    {prod.specifications.map((spec, idx) => (
-                      <li key={idx}>{spec.name}: {spec.value}</li>
-                    ))}
-                  </ul>
-                ) : 'No specs'}
-              </td>
-              <td>
-                {prod.ingredients && prod.ingredients.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    {prod.ingredients.map((ing, idx) => (
-                      <li key={idx}>{ing.name} ({ing.quantity})</li>
-                    ))}
-                  </ul>
-                ) : 'No ingredients'}
-              </td>
-              <td>{prod.discount ?? 0}%</td>
-              <td>
-                {avgRatings[prod._id]
-                  ? avgRatings[prod._id].toFixed(1)
-                  : 'No ratings'}
-              </td>
-              <td>
-                <button
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 24,
-                    color: wishlist.includes(prod._id) ? 'red' : 'gray'
-                  }}
-                  onClick={() => handleWishlistToggle(prod._id)}
-                  title={wishlist.includes(prod._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  {wishlist.includes(prod._id) ? '♥' : '♡'}
-                </button>
-              </td>
-              {/* ...other columns/actions... */}
-              <td>
-                {/* --- Review writing area --- */}
-                <div style={{ minWidth: 200 }}>
-                  <textarea
-                    rows={2}
-                    placeholder="Write your review..."
-                    value={reviewInputs[prod._id]?.text || ''}
-                    onChange={e => handleReviewInputChange(prod._id, 'text', e.target.value)}
-                    style={{ width: '100%' }}
-                  />
-                  <div>
-                    <StarRating
-                      value={reviewInputs[prod._id]?.rating || 0}
-                      onChange={val => handleReviewInputChange(prod._id, 'rating', val)}
+    <div className="admin-products-container">
+      <div className="admin-header">
+        <h2>Product Management</h2>
+        <button className="btn-primary" onClick={() => navigate('/add-product')}>
+          Add New Product
+        </button>
+      </div>
+
+      <div className="products-grid">
+        {products.map(prod => (
+          <div key={prod._id || prod.productId} className="product-card">
+            <div className="product-card-header">
+              <h3>{prod.name}</h3>
+              <span className="product-id">ID: {prod.productId}</span>
+            </div>
+
+            <div className="product-images">
+              {prod.images && prod.images.length > 0 ? (
+                <div className="image-gallery">
+                  {prod.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={prod.name}
+                      className="product-thumbnail"
                     />
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={e => handleReviewImageChange(prod._id, e.target.files)}
-                  />
-                  <button onClick={() => handleReviewSubmit(prod._id)}>
-                    Submit Review
-                  </button>
+                  ))}
                 </div>
-              </td>
-              <td>
-                <button
-                  style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
-                  onClick={() => handleRemoveProduct(prod._id)}
-                >
-                  Remove
-                </button>
-              </td>
-              <td>
-                <button
-                  style={{ background: '#2980b9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer' }}
-                  onClick={() => navigate(`/edit-product/${prod.productId}`)}
-                >
-                  Update
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              ) : (
+                <div className="no-image-placeholder">No images</div>
+              )}
+            </div>
+
+            <div className="product-details">
+              <p className="product-description">{prod.description}</p>
+              
+              <div className="detail-row">
+                <span className="detail-label">Category:</span>
+                <span className="detail-value">{prod.category}</span>
+              </div>
+              
+              <div className="detail-row">
+                <span className="detail-label">Discount:</span>
+                <span className="detail-value">{prod.discount ?? 0}%</span>
+              </div>
+              
+              <div className="detail-row">
+                <span className="detail-label">Rating:</span>
+                <span className="detail-value">
+                  {avgRatings[prod._id] ? (
+                    <div className="rating-display">
+                      <StarRating value={avgRatings[prod._id]} readonly={true} />
+                      <span>({avgRatings[prod._id].toFixed(1)})</span>
+                    </div>
+                  ) : (
+                    'No ratings'
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="expandable-section">
+              <button 
+                className="expand-toggle"
+                onClick={() => toggleProductExpansion(prod._id)}
+              >
+                {expandedProduct === prod._id ? 'Hide Details' : 'Show Details'}
+              </button>
+              
+              {expandedProduct === prod._id && (
+                <div className="expanded-details">
+                  <div className="detail-section">
+                    <h4>Pricing</h4>
+                    {prod.quantities && prod.quantities.length > 0 ? (
+                      <ul className="detail-list">
+                        {prod.quantities.map((q, idx) => (
+                          <li key={idx} className="detail-item">
+                            <span className="size">{q.size}:</span>
+                            <span className="price">₹{q.price}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="no-data">No pricing information</p>
+                    )}
+                  </div>
+
+                  <div className="detail-section">
+                    <h4>Specifications</h4>
+                    {prod.specifications && prod.specifications.length > 0 ? (
+                      <ul className="detail-list">
+                        {prod.specifications.map((spec, idx) => (
+                          <li key={idx} className="detail-item">
+                            <span className="spec-name">{spec.name}:</span>
+                            <span className="spec-value">{spec.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="no-data">No specifications</p>
+                    )}
+                  </div>
+
+                  <div className="detail-section">
+                    <h4>Ingredients</h4>
+                    {prod.ingredients && prod.ingredients.length > 0 ? (
+                      <ul className="detail-list">
+                        {prod.ingredients.map((ing, idx) => (
+                          <li key={idx} className="detail-item">
+                            <span className="ingredient-name">{ing.name}</span>
+                            <span className="ingredient-quantity">({ing.quantity})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="no-data">No ingredients listed</p>
+                    )}
+                  </div>
+
+                  <div className="detail-section">
+                    <h4>Write a Review</h4>
+                    <div className="review-form">
+                      <textarea
+                        rows={3}
+                        placeholder="Write your review..."
+                        value={reviewInputs[prod._id]?.text || ''}
+                        onChange={e => handleReviewInputChange(prod._id, 'text', e.target.value)}
+                        className="review-textarea"
+                      />
+                      <div className="rating-input">
+                        <span>Rating: </span>
+                        <StarRating
+                          value={reviewInputs[prod._id]?.rating || 0}
+                          onChange={val => handleReviewInputChange(prod._id, 'rating', val)}
+                        />
+                      </div>
+                      <div className="image-upload">
+                        <label className="file-upload-label">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={e => handleReviewImageChange(prod._id, e.target.files)}
+                          />
+                          Upload Images
+                        </label>
+                      </div>
+                      <button 
+                        onClick={() => handleReviewSubmit(prod._id)}
+                        className="btn-secondary"
+                      >
+                        Submit Review
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="product-actions">
+              <button
+                className={`wishlist-btn ${wishlist.includes(prod._id) ? 'in-wishlist' : ''}`}
+                onClick={() => handleWishlistToggle(prod._id)}
+                title={wishlist.includes(prod._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                {wishlist.includes(prod._id) ? '♥' : '♡'}
+              </button>
+              
+              <button
+                className="btn-danger"
+                onClick={() => handleRemoveProduct(prod._id)}
+              >
+                Remove
+              </button>
+              
+              <button
+                className="btn-primary"
+                onClick={() => navigate(`/edit-product/${prod.productId}`)}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

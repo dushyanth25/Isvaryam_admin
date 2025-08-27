@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const instance = axios.create({
   //baseURL: 'https://isvaryam-backend.onrender.com', // or your backend URL
-  baseURL: 'http://localhost:5000', // or your backend URL
+  baseURL: 'https://isvaryamweb-final.onrender.com', // or your backend URL
 
 });
 

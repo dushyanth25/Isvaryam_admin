@@ -1,26 +1,87 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Home.css'; // We'll create this CSS file
 
 function Home() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
-    <div>
-      <h2>Welcome to Home Page</h2>
-      <button onClick={() => navigate('/add-product')}>Add Product</button>
-      <button onClick={() => navigate('/display-products')}>Display Products</button>
-      <button onClick={() => navigate('/reviews')}>Reviews</button>
-      <button onClick={() => navigate('/wishlist')}>Wishlist</button> {/* Added Wishlist button */}
-      <button onClick={() => navigate('/coupons')}>Coupons</button> {/* Add this line */}
-      <button onClick={() => navigate('/display-recipes')}>Display Recipes</button> {/* Added Edit Recipe button */}
-     {/* Fastbot Integration */}
-<button onClick={() => navigate('/add-recipe')}>Add Recipe</button> {/* Add this line */}
-      <div style={{ marginTop: 20 }}>
-        <iframe
-          style={{ width: 400, height: 600, border: 'none' }}
-          src="https://app.fastbots.ai/embed/cmazgeraw003hoelu7up9cu08"
-          title="Fastbot"
-        ></iframe>
+    <div className="dashboard-container">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="header-content">
+          <h1>Admin Dashboard</h1>
+          <div className="user-menu">
+            <span>Welcome, {user.name || 'Admin'}</span>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="dashboard-content">
+        {/* Navigation Cards */}
+        <div className="dashboard-grid">
+          <div className="dashboard-card" onClick={() => navigate('/add-product')}>
+            <div className="card-icon">📦</div>
+            <h3>Add Product</h3>
+            <p>Create new product listings</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/display-products')}>
+            <div className="card-icon">📋</div>
+            <h3>Display Products</h3>
+            <p>View and manage products</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/reviews')}>
+            <div className="card-icon">⭐</div>
+            <h3>Reviews</h3>
+            <p>Manage customer reviews</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/wishlist')}>
+            <div className="card-icon">❤️</div>
+            <h3>Wishlist</h3>
+            <p>View customer wishlists</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/coupons')}>
+            <div className="card-icon">🎫</div>
+            <h3>Coupons</h3>
+            <p>Create and manage discounts</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/display-recipes')}>
+            <div className="card-icon">📝</div>
+            <h3>Display Recipes</h3>
+            <p>View and manage recipes</p>
+          </div>
+
+          <div className="dashboard-card" onClick={() => navigate('/add-recipe')}>
+            <div className="card-icon">🍳</div>
+            <h3>Add Recipe</h3>
+            <p>Create new recipes</p>
+          </div>
+        </div>
+
+        {/* Fastbot Integration */}
+        <div className="fastbot-section">
+          <h2>AI Assistant</h2>
+          <div className="fastbot-container">
+            <iframe
+              src="https://app.fastbots.ai/embed/cmazgeraw003hoelu7up9cu08"
+              title="Fastbot AI Assistant"
+              className="fastbot-iframe"
+            ></iframe>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axiosInstance';
 import { useNavigate, useParams } from 'react-router-dom';
+import './EditRecipe.css'; // We'll create this CSS file
 
 const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 
 async function uploadToCloudinary(file) {
   const data = new FormData();
   data.append('file', file);
-  data.append('upload_preset', 'isvaryam'); // <-- set your preset
+  data.append('upload_preset', 'isvaryam');
   const res = await fetch('https://api.cloudinary.com/v1_1/ddv0mpecp/image/upload', {
     method: 'POST',
     body: data,
@@ -33,6 +34,7 @@ export default function EditRecipe() {
   const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,6 +109,7 @@ export default function EditRecipe() {
   };
 
   const handleImagesChange = async (e) => {
+    setUploading(true);
     const files = Array.from(e.target.files);
     try {
       const urls = [];
@@ -118,6 +121,7 @@ export default function EditRecipe() {
     } catch {
       setError('Image upload failed');
     }
+    setUploading(false);
   };
 
   const removeImage = idx => {
@@ -141,136 +145,258 @@ export default function EditRecipe() {
     e.preventDefault();
     setError('');
     try {
-      // Add the tagInput to tags if it's not empty and not already present
       let tags = form.tags;
       if (tagInput && !tags.includes(tagInput)) {
         tags = [...tags, tagInput];
       }
       const payload = {
         ...form,
-        tags, // use the updated tags array
+        tags,
         cookingTime: form.cookingTime ? Number(form.cookingTime) : undefined,
         prepTime: form.prepTime ? Number(form.prepTime) : undefined,
       };
       await axios.put(`/api/recipes/${id}`, payload);
-      alert('Recipe updated!');
-      navigate('/'); // or to recipes list
+      alert('Recipe updated successfully!');
+      navigate('/admin/recipes');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update recipe');
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="loading">Loading recipe...</div>;
 
   return (
-    <div style={{ maxWidth: 700, margin: '40px auto' }}>
-      <h2>Edit Recipe</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Title: <input value={form.title} onChange={e => handleChange('title', e.target.value)} required /></label>
+    <div className="edit-recipe-container">
+      <div className="edit-recipe-header">
+        <h2>Edit Recipe</h2>
+        <button className="back-button" onClick={() => navigate('/admin/recipes')}>
+          ← Back to Recipes
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="recipe-form">
+        <div className="form-section">
+          <h3>Basic Information</h3>
+          <div className="form-group">
+            <label>Title</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={e => handleChange('title', e.target.value)}
+              required
+              placeholder="Enter recipe title"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Description</label>
+            <textarea
+              value={form.description}
+              onChange={e => handleChange('description', e.target.value)}
+              placeholder="Describe your recipe"
+              rows="3"
+            />
+          </div>
         </div>
-        <div>
-          <label>Description: <textarea value={form.description} onChange={e => handleChange('description', e.target.value)} /></label>
-        </div>
-        <div>
-          <label>Ingredients:</label>
+
+        <div className="form-section">
+          <h3>Ingredients</h3>
           {form.ingredients.map((ing, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+            <div key={idx} className="ingredient-row">
               <input
-                placeholder="Name"
+                type="text"
+                placeholder="Ingredient name"
                 value={ing.name}
                 onChange={e => handleIngredientChange(idx, 'name', e.target.value)}
                 required
+                className="ingredient-input"
               />
               <input
+                type="text"
                 placeholder="Quantity"
                 value={ing.quantity}
                 onChange={e => handleIngredientChange(idx, 'quantity', e.target.value)}
                 required
+                className="quantity-input"
               />
               {form.ingredients.length > 1 && (
-                <button type="button" onClick={() => removeIngredient(idx)}>-</button>
+                <button
+                  type="button"
+                  onClick={() => removeIngredient(idx)}
+                  className="remove-button"
+                  title="Remove ingredient"
+                >
+                  ×
+                </button>
               )}
             </div>
           ))}
-          <button type="button" onClick={addIngredient}>Add Ingredient</button>
+          <button type="button" onClick={addIngredient} className="add-button">
+            + Add Ingredient
+          </button>
         </div>
-        <div>
-          <label>Instructions:</label>
+
+        <div className="form-section">
+          <h3>Instructions</h3>
           {form.instructions.map((inst, idx) => (
-            <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+            <div key={idx} className="instruction-row">
+              <div className="step-number">Step {idx + 1}</div>
               <textarea
-                placeholder={`Step ${idx + 1}`}
                 value={inst}
                 onChange={e => handleInstructionChange(idx, e.target.value)}
                 required
+                placeholder={`Describe step ${idx + 1}`}
+                rows="2"
               />
               {form.instructions.length > 1 && (
-                <button type="button" onClick={() => removeInstruction(idx)}>-</button>
+                <button
+                  type="button"
+                  onClick={() => removeInstruction(idx)}
+                  className="remove-button"
+                  title="Remove step"
+                >
+                  ×
+                </button>
               )}
             </div>
           ))}
-          <button type="button" onClick={addInstruction}>Add Step</button>
+          <button type="button" onClick={addInstruction} className="add-button">
+            + Add Step
+          </button>
         </div>
-        <div>
-          <label>Images:</label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImagesChange}
-          />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+
+        <div className="form-section">
+          <h3>Media</h3>
+          <div className="form-group">
+            <label>Upload Images</label>
+            <div className="file-upload">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImagesChange}
+                id="image-upload"
+                className="file-input"
+              />
+              <label htmlFor="image-upload" className="file-upload-label">
+                {uploading ? 'Uploading...' : 'Choose Images'}
+              </label>
+            </div>
+            {uploading && <div className="upload-progress">Uploading images...</div>}
+          </div>
+
+          <div className="image-preview-grid">
             {form.images.map((img, idx) => (
-              <div key={idx} style={{ position: 'relative' }}>
-                <img src={img} alt={`Recipe ${idx}`} style={{ width: 80, height: 80, objectFit: 'cover' }} />
-                <button
-                  type="button"
-                  onClick={() => removeImage(idx)}
-                  style={{
-                    position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer'
-                  }}
-                  title="Remove"
-                >×</button>
-              </div>
+              img && (
+                <div key={idx} className="image-preview">
+                  <img src={img} alt={`Preview ${idx}`} />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="remove-image-button"
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+              )
             ))}
           </div>
+
+          <div className="form-group">
+            <label>Video URL</label>
+            <input
+              type="url"
+              value={form.videoUrl}
+              onChange={e => handleChange('videoUrl', e.target.value)}
+              placeholder="https://example.com/video"
+            />
+          </div>
         </div>
-        <div>
-          <label>Tags:</label>
-          <input
-            placeholder="Add tag"
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' ? (e.preventDefault(), handleTagAdd()) : null}
-          />
-          <button type="button" onClick={handleTagAdd}>Add Tag</button>
-          <div>
+
+        <div className="form-section">
+          <h3>Details</h3>
+          <div className="details-grid">
+            <div className="form-group">
+              <label>Preparation Time (minutes)</label>
+              <input
+                type="number"
+                value={form.prepTime}
+                onChange={e => handleChange('prepTime', e.target.value)}
+                min="0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Cooking Time (minutes)</label>
+              <input
+                type="number"
+                value={form.cookingTime}
+                onChange={e => handleChange('cookingTime', e.target.value)}
+                min="0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Difficulty Level</label>
+              <select
+                value={form.difficulty}
+                onChange={e => handleChange('difficulty', e.target.value)}
+              >
+                {difficultyLevels.map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h3>Tags</h3>
+          <div className="tags-input-group">
+            <input
+              type="text"
+              placeholder="Add tag and press Enter"
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' ? (e.preventDefault(), handleTagAdd()) : null}
+              className="tag-input"
+            />
+            <button type="button" onClick={handleTagAdd} className="add-tag-button">
+              Add Tag
+            </button>
+          </div>
+          
+          <div className="tags-container">
             {form.tags.map(tag => (
-              <span key={tag} style={{ marginRight: 8 }}>
-                {tag} <button type="button" onClick={() => removeTag(tag)}>x</button>
+              <span key={tag} className="tag">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="remove-tag-button"
+                >
+                  ×
+                </button>
               </span>
             ))}
           </div>
         </div>
-        <div>
-          <label>Cooking Time (min): <input type="number" value={form.cookingTime} onChange={e => handleChange('cookingTime', e.target.value)} /></label>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="form-actions">
+          <button
+            type="button"
+            onClick={() => navigate('/admin/recipes')}
+            className="cancel-button"
+          >
+            Cancel
+          </button>
+          <button type="submit" className="submit-button">
+            Update Recipe
+          </button>
         </div>
-        <div>
-          <label>Prep Time (min): <input type="number" value={form.prepTime} onChange={e => handleChange('prepTime', e.target.value)} /></label>
-        </div>
-        <div>
-          <label>Difficulty:
-            <select value={form.difficulty} onChange={e => handleChange('difficulty', e.target.value)}>
-              {difficultyLevels.map(level => <option key={level} value={level}>{level}</option>)}
-            </select>
-          </label>
-        </div>
-        <div>
-          <label>Video URL: <input value={form.videoUrl} onChange={e => handleChange('videoUrl', e.target.value)} /></label>
-        </div>
-        {error && <div style={{ color: 'red', margin: '8px 0' }}>{error}</div>}
-        <button type="submit">Update Recipe</button>
       </form>
     </div>
   );
