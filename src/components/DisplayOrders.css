@@ -1,0 +1,111 @@
+/* --- General page styling --- */
+.orders-dashboard {
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.dashboard-header h2 {
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.filters-container input {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  flex: 1;
+}
+
+.filters-container button {
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.filters-container button:hover {
+  background-color: #1e40af;
+}
+
+.table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.orders-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.orders-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.status-select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Status colors --- */
+.status-select.new { background-color: #3b82f6; }       /* Blue */
+.status-select.pending { background-color: #f97316; }   /* Orange */
+.status-select.payed { background-color: #6366f1; }     /* Indigo */
+.status-select.shipped { background-color: #10b981; }   /* Green */
+.status-select.cancelled { background-color: #ef4444; } /* Red */
+.status-select.delivered { background-color: #059669; } /* Teal */
+.status-select.refunded { background-color: #8b5cf6; }  /* Purple */
+
+/* --- Buttons --- */
+.btn-view {
+  padding: 0.3rem 0.6rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-right: 0.25rem;
+  transition: 0.2s;
+}
+
+.btn-view:hover {
+  background-color: #1e40af;
+}
+
+.no-records {
+  text-align: center;
+  padding: 1rem;
+  color: #6b7280;
+}
