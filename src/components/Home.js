@@ -69,19 +69,23 @@ function Home() {
             <h3>Add Recipe</h3>
             <p>Create new recipes</p>
           </div>
-        </div>
+        
 
-        {/* Fastbot Integration */}
-        <div className="fastbot-section">
-          <h2>AI Assistant</h2>
-          <div className="fastbot-container">
-            <iframe
-              src="https://app.fastbots.ai/embed/cmazgeraw003hoelu7up9cu08"
-              title="Fastbot AI Assistant"
-              className="fastbot-iframe"
-            ></iframe>
+        <div className="dashboard-card" onClick={() => navigate('/Order')}>
+            <div className="card-icon">🍳</div>
+            <h3>Orders</h3>
+            <p>All orders</p>
           </div>
         </div>
+<div className="dashboard-card" onClick={() => navigate('/users')}>
+            <div className="card-icon">👤</div>
+            <h3>Users</h3>
+            <p>View and manage users</p>
+          </div>
+        
+        {/* Fastbot Integration */}
+        
+        
       </div>
     </div>
   );
