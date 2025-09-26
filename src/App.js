@@ -13,6 +13,12 @@ import AddRecipe from './components/AddRecipe';
 import DisplayRecipe from './components/DisplayRecipe';
 import EditRecipe from './components/EditRecipe';
 
+import DisplayOrders from './components/orderdetails';
+import Editorder from './components/edit-order'
+import AdminOrderDetails from './components/OrderDetailswithid';
+import UsersPage from './components/UsersPage';
+
+import EditUserPage from './components/EditUserPage';
 function App() {
   return (
     <Router>
@@ -25,11 +31,20 @@ function App() {
         <Route path="/edit-product/:productId" element={<EditProducts />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/wishlist" element={<WhishList />} />
+
+        <Route path="/users" element={<UsersPage />} />
         <Route path="/coupons" element={<CouponPage />} />
+         <Route path="/users/edit/:id" element={<EditUserPage />} />
+    
+
+        <Route path="/order/:id" element={<AdminOrderDetails />} />
+        <Route path="/order" element={<DisplayOrders />} />
         <Route path="/add-recipe" element={<AddRecipe />} />
         <Route path="/display-recipes" element={<DisplayRecipe />} />
         <Route path="/edit-recipe/:id" element={<EditRecipe />} />
         <Route path="/edit-product/:productId" element={<EditProducts />} />
+
+        <Route path="/edit-order/:orederId" element={<Editorder />} />
       </Routes>
     </Router>
   );
